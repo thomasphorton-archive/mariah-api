@@ -31,22 +31,38 @@ Resources:
             Method: ANY
 
   TripData:
-    Type: AWS::Serverless::SimpleTable
-    PrimaryKey:
-      Name: tripId
-      Type: String
-    SortKey:
-      Name: ts
-      Type: Number
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: tripId
+          AttributeType: S
+        - AttributeName: ts
+          AttributeType: N
+      KeySchema:
+        - AttributeName: tripId
+          KeyType: HASH
+        - AttributeName: ts
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
 
   Trips:
-    Type: AWS::Serverless::SimpleTable
-    PrimaryKey:
-      Name: userId
-      Type: String
-    SortKey:
-      Name: tripId
-      Type: String
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: tripId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: tripId
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
 
 Outputs:
   ApiUrl:
