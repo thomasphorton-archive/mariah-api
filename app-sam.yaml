@@ -20,7 +20,8 @@ Resources:
       Runtime: nodejs8.10
       Policies:
         - AWSLambdaBasicExecutionRole
-        - PolicyDocument:
+        - PolicyName: "DynamoDB Access"
+          PolicyDocument:
             Statement:
               - Effect: "Allow"
                 Action: "dynamodb:*"
