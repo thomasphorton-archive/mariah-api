@@ -9,18 +9,14 @@ cf = boto3.client("cloudformation")
 def lambda_handler(event, context):
     print json.dumps(event, sort_keys=True, indent=4, separators=(',', ': '))
 
-    job_id = event["job_id"] 
+    job_id = event["job_id"]
     api_url = event["api_url"]
 
     ########################################################
     # RUN INTEGRATION TESTS AGAINST API ENDPOINT (api_url) #
     ########################################################
 
-    if random.random() < .8:
-        _complete_job(job_id)
-    else:
-        _fail_job(job_id, 'Random test failure')
-    return 
+    _complete_job(job_id)
 
 def _complete_job(job_id):
     print("Random complete")
