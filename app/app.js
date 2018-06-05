@@ -1,6 +1,11 @@
-var express = require('express')
-var bodyParser = require('body-parser')
-var moment = require('moment-timezone')
+var express = require('express');
+var bodyParser = require('body-parser');
+var moment = require('moment-timezone');
+
+// Load .env in development environments.
+if (process.env.NODE_ENV === 'development') {
+  require('dotenv').config();
+}
 
 const AWS = require('aws-sdk');
 
@@ -23,7 +28,7 @@ app.get('/trips', function(req, res) {
   const docClient = new AWS.DynamoDB.DocumentClient();
 
   var params = {
-    TableName: 'mariah-trips-2',
+    TableName: `${process.env.TRIPS_TABLE}`,
     KeyConditionExpression: 'userId = :userId',
     ExpressionAttributeValues: {
       ':userId': '1'
@@ -70,7 +75,7 @@ function getTripData(state) {
     const docClient = new AWS.DynamoDB.DocumentClient();
 
     var params = {
-      TableName: 'mariah-trips-2',
+      TableName: `${process.env.TRIPS_TABLE}`,
       Key: {
         userId: '1',
         tripId: state.tripId
@@ -134,7 +139,7 @@ function createTripGeoJson(state) {
     };
 
     var params = {
-      TableName:  'mariah-trip-data-3',
+      TableName:  `${process.env.TRIP_DATA_TABLE}`,
       KeyConditionExpression: 'tripId = :trip_id',
       ExpressionAttributeValues: {
         ':trip_id': state.tripId
@@ -219,7 +224,7 @@ function updateTripData(state) {
     const docClient = new AWS.DynamoDB.DocumentClient();
 
     var params = {
-      TableName: 'mariah-trips-2',
+      TableName: `${process.env.TRIPS_TABLE}`,
       Key: {
         userId: '1',
         tripId: state.tripId
@@ -255,11 +260,14 @@ function updateTripData(state) {
   })
 }
 
-// var port = 3001;
-//
-// app.listen(port, function() {
-//     console.log(`Application listening on http://localhost:${port}`)
-// })
+if (process.env.NODE_ENV === 'development') {
+  var port = 3001;
+
+  app.listen(port, function() {
+      console.log(`Application listening on http://localhost:${port}`)
+  })
+}
+
 
 // Export the app object. When executing the application local this does nothing. However,
 // to port it to AWS Lambda we will create a wrapper around that will load the app from

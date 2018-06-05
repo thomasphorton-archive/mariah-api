@@ -21,8 +21,8 @@ Resources:
       Policies: AWSLambdaBasicExecutionRole
       Environment:
         Variables:
-          TripDataTable: !Ref TripData
-          TripsTable: !Ref Trips
+          TRIP_DATA_TABLE: !Ref TripData
+          TRIPS_TABLE: !Ref Trips
       Events:
         ApiEventSource:
           Type: Api
