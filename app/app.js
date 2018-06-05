@@ -60,19 +60,11 @@ app.get('/trip/:tripId', (req, res) => {
 
   // get trip data
   getTripData(state)
-  // if trip hasn't been processed
 
-    // create geojson file
-    .then(state => createTripGeoJson(state))
-
-    // upload file to s3
-    .then(state => uploadGeoJson(state))
-
-    // update trip table with pointer
-    .then(state => updateTripData(state))
-
-  // // return trip data
-  .then(state => res.status(200).json(state))
+  // return trip data
+  .then((state) => {
+    res.status(200).json(state)
+  })
 
 })
 
@@ -88,22 +80,47 @@ function getTripData(state) {
       }
     };
 
-    console.log('trip params: ', params);
-
     docClient.get(params, (err, data) => {
       if (err) {
         console.log(err);
         reject(err);;
       } else {
-        resolve(state);
+
+        if (!data.Item.lastProcessed) {
+          processTrip(state)
+            .then(state => {
+              resolve(state);
+            })
+        } else {
+          mergedState = Object.assign(state, data.Item);
+          resolve(mergedState);
+        }
       }
     })
 
   })
 }
 
+function processTrip(state) {
+  return new Promise((resolve, reject) => {
+    createTripGeoJson(state)
+
+    // upload file to s3
+    .then(state => uploadGeoJson(state))
+
+    // update trip table with pointer
+    .then(state => updateTripData(state))
+
+    .then(state => {
+      console.log(state);
+      resolve(state);
+    });
+  });
+}
+
 function createTripGeoJson(state) {
   return new Promise((resolve, reject) => {
+
     const docClient = new AWS.DynamoDB.DocumentClient();
 
     let geojson = {
@@ -124,7 +141,6 @@ function createTripGeoJson(state) {
         console.error(JSON.stringify(err, null, 2));
         reject(err);
       } else {
-        console.log(data);
         let coords = [];
         let sumLon = 0;
         let sumLat = 0;
@@ -151,11 +167,11 @@ function createTripGeoJson(state) {
             lat: 0
           };
         }
-        
-        console.log(state);
+
         geojson.coordinates = coords;
         state.ts = data.ts;
         state.geojson = geojson;
+        state.lastProcessed = new Date().getTime();
         resolve(state);
       }
     });
@@ -205,20 +221,19 @@ function updateTripData(state) {
         'geoJsonCenter': {
           Action: 'PUT',
           Value: state.geoJsonCenter
+        },
+        'lastProcessed': {
+          Action: 'PUT',
+          Value: state.lastProcessed
         }
       }
     };
-
-    console.log(params);
 
     docClient.update(params, (err, data) => {
       if (err) {
         console.log("Unable to query. Error: ", JSON.stringify(err, null, 2));
         reject(err);
       } else {
-        console.log("Update succeeded.");
-        console.log(data);
-
         resolve(state);
       }
     })
