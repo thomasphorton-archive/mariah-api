@@ -20,14 +20,13 @@ Resources:
       Runtime: nodejs8.10
       Policies:
         - AWSLambdaBasicExecutionRole
-        - PolicyName: "DynamoDB Access"
-          PolicyDocument:
-            Statement:
-              - Effect: "Allow"
-                Action: "dynamodb:*"
-                Resource:
-                  - !Sub '${TripData.Arn}'
-                  - !Sub '${Trips.Arn}'
+        - Version: 2012-10-17
+          Statement:
+          - Effect: "Allow"
+            Action: "dynamodb:*"
+            Resource:
+            - !Sub '${TripData.Arn}'
+            - !Sub '${Trips.Arn}'
       Environment:
         Variables:
           TRIP_DATA_TABLE: !Ref TripData
