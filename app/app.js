@@ -155,8 +155,6 @@ function createTripGeoJson(state) {
         let sumLon = 0;
         let sumLat = 0;
 
-        let count = data.Count;
-
         let tripEnd = 0;
 
         data.Items.forEach(item => {
@@ -172,10 +170,10 @@ function createTripGeoJson(state) {
           }
         });
 
-        if (count > 0) {
+        if (coords.length > 0) {
           state.geoJsonCenter = {
-            lon: sumLon / count,
-            lat: sumLat / count
+            lon: sumLon / coords.length,
+            lat: sumLat / coords.length
           };
         } else {
           state.geoJsonCenter = {

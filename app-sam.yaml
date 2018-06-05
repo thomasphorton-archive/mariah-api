@@ -17,8 +17,16 @@ Resources:
     Properties:
       Handler: index.handler
       CodeUri: app/
-      Runtime: nodejs4.3
-      Policies: AWSLambdaBasicExecutionRole
+      Runtime: nodejs8.10
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - PolicyDocument:
+            Statement:
+              - Effect: "Allow"
+                Action: "dynamodb:*"
+                Resource:
+                  - !Sub '${TripData.Arn}'
+                  - !Sub '${Trips.Arn}'
       Environment:
         Variables:
           TRIP_DATA_TABLE: !Ref TripData
