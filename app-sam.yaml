@@ -12,7 +12,7 @@ Parameters:
     Description: Stage that can be added to resource names
 
 Resources:
-  TimeFunction:
+  TripApiFunction:
     Type: AWS::Serverless::Function
     Properties:
       Handler: index.handler
@@ -25,6 +25,24 @@ Resources:
           Properties:
             Path: /{proxy+}
             Method: ANY
+
+  TripData:
+    Type: AWS::Serverless::SimpleTable
+    PrimaryKey:
+      Name: tripId
+      Type: String
+    SortKey:
+      Name: ts
+      Type: Number
+
+  Trips:
+    Type: AWS::Serverless::SimpleTable
+    PrimaryKey:
+      Name: userId
+      Type: String
+    SortKey:
+      Name: tripId
+      Type: String
 
 Outputs:
   ApiUrl:
