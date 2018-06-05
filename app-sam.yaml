@@ -19,6 +19,10 @@ Resources:
       CodeUri: app/
       Runtime: nodejs4.3
       Policies: AWSLambdaBasicExecutionRole
+      Environment:
+        Variables:
+          TripDataTable: !Ref TripData
+          TripsTable: !Ref Trips
       Events:
         ApiEventSource:
           Type: Api
