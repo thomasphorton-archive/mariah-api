@@ -37,9 +37,6 @@ app.get('/trips', function(req, res) {
         "err": err
       })
     } else {
-      console.log("Query succeeded.");
-      console.log(data);
-
       let trips = data.Items;
 
       trips.sort((a, b) => {
@@ -86,13 +83,22 @@ function getTripData(state) {
         reject(err);;
       } else {
 
-        if (!data.Item.lastProcessed) {
-          processTrip(state)
+        mergedState = Object.assign(state, data.Item);
+
+        let keepAlive = 5 * 60 * 1000
+        let timeSinceTripEnd = 0;
+
+        if (data.Item.tripEnd) {
+          let now = new Date().getTime();
+          timeSinceTripEnd = now - data.Item.tripEnd;
+        }
+
+        if (!data.Item.tripEnd || timeSinceTripEnd < keepAlive) {
+          processTrip(mergedState)
             .then(state => {
               resolve(state);
             })
         } else {
-          mergedState = Object.assign(state, data.Item);
           resolve(mergedState);
         }
       }
@@ -112,7 +118,6 @@ function processTrip(state) {
     .then(state => updateTripData(state))
 
     .then(state => {
-      console.log(state);
       resolve(state);
     });
   });
@@ -147,12 +152,18 @@ function createTripGeoJson(state) {
 
         let count = data.Count;
 
+        let tripEnd = 0;
+
         data.Items.forEach(item => {
           if (item.lon !== undefined && item.lat !== undefined) {
 
             sumLon += parseFloat(item.lon);
             sumLat += parseFloat(item.lat);
             coords.push([parseFloat(item.lon), parseFloat(item.lat)]);
+
+            if (item.ts > tripEnd) {
+              tripEnd = item.ts;
+            }
           }
         });
 
@@ -169,7 +180,7 @@ function createTripGeoJson(state) {
         }
 
         geojson.coordinates = coords;
-        state.ts = data.ts;
+        state.tripEnd = tripEnd;
         state.geojson = geojson;
         state.lastProcessed = new Date().getTime();
         resolve(state);
@@ -225,6 +236,10 @@ function updateTripData(state) {
         'lastProcessed': {
           Action: 'PUT',
           Value: state.lastProcessed
+        },
+        'tripEnd': {
+          Action: 'PUT',
+          Value: state.tripEnd
         }
       }
     };
