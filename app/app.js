@@ -64,11 +64,13 @@ app.get('/trip/:tripId', (req, res) => {
 
     // create geojson file
     .then(state => createTripGeoJson(state))
-  //
-  //   // upload file to s3
+
+    // upload file to s3
     .then(state => uploadGeoJson(state))
-  //   // update trip table with pointer
+
+    // update trip table with pointer
     .then(state => updateTripData(state))
+
   // // return trip data
   .then(state => res.status(200).json(state))
 
@@ -93,7 +95,6 @@ function getTripData(state) {
         console.log(err);
         reject(err);;
       } else {
-        console.log('getTripData:', data);
         resolve(state);
       }
     })
@@ -116,7 +117,7 @@ function createTripGeoJson(state) {
       ExpressionAttributeValues: {
         ':trip_id': state.tripId
       }
-    }
+    };
 
     docClient.query(params, (err, data) => {
       if (err) {
@@ -125,12 +126,33 @@ function createTripGeoJson(state) {
       } else {
         console.log(data);
         let coords = [];
+        let sumLon = 0;
+        let sumLat = 0;
+
+        let count = data.Count;
+
         data.Items.forEach(item => {
           if (item.lon !== undefined && item.lat !== undefined) {
+
+            sumLon += parseFloat(item.lon);
+            sumLat += parseFloat(item.lat);
             coords.push([parseFloat(item.lon), parseFloat(item.lat)]);
           }
         });
 
+        if (count > 0) {
+          state.geoJsonCenter = {
+            lon: sumLon / count,
+            lat: sumLat / count
+          };
+        } else {
+          state.geoJsonCenter = {
+            lon: 0,
+            lat: 0
+          };
+        }
+        
+        console.log(state);
         geojson.coordinates = coords;
         state.ts = data.ts;
         state.geojson = geojson;
@@ -179,6 +201,10 @@ function updateTripData(state) {
         'geoJsonUrl': {
           Action: 'PUT',
           Value: state.dataUrl
+        },
+        'geoJsonCenter': {
+          Action: 'PUT',
+          Value: state.geoJsonCenter
         }
       }
     };
