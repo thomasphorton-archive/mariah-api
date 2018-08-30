@@ -2,15 +2,12 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var moment = require('moment-timezone');
 
-// Load .env in development environments.
-if (process.env.NODE_ENV === 'development') {
-  require('dotenv').config();
-}
+require('dotenv').config();
 
 const AWS = require('aws-sdk');
 
 AWS.config.update({
-  region: 'us-west-2'
+  region: process.env.AWS_REGION
 });
 
 // declare a new express app
@@ -90,22 +87,19 @@ function getTripData(state) {
 
         mergedState = Object.assign(state, data.Item);
 
-        let keepAlive = 5 * 60 * 1000
         let timeSinceTripEnd = 0;
 
+        // Calculate the time passed since the last datapoint and now.
         if (data.Item.tripEnd) {
           let now = new Date().getTime();
           timeSinceTripEnd = now - data.Item.tripEnd;
         }
 
-        if (!data.Item.tripEnd || timeSinceTripEnd < keepAlive) {
-          processTrip(mergedState)
-            .then(state => {
-              resolve(state);
-            })
-        } else {
-          resolve(mergedState);
-        }
+        processTrip(mergedState)
+          .then(state => {
+            resolve(state);
+          });
+
       }
     })
 
@@ -259,13 +253,12 @@ function updateTripData(state) {
 }
 
 if (process.env.NODE_ENV === 'development') {
-  var port = 3001;
+  var port = process.env.PORT || 3001;
 
   app.listen(port, function() {
       console.log(`Application listening on http://localhost:${port}`)
-  })
+  });
 }
-
 
 // Export the app object. When executing the application local this does nothing. However,
 // to port it to AWS Lambda we will create a wrapper around that will load the app from
